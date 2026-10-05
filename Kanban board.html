@@ -2,415 +2,334 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 <title>Kanban</title>
-
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
-:root{
-    --glass:rgba(255,255,255,.55);
-    --blur:blur(24px);
-    --radius:26px;
-    --shadow-soft:0 30px 60px rgba(0,0,0,.18);
-    --pm:#4f8cff;
-    --cm:#ff6b6b;
-}
+:root{--bg:#f4f4fa;--card:#fff;--fill:rgba(118,118,128,.12);--line:rgba(60,60,67,.12);--text:#1d1d1f;--sub:#86868b;--ac:#5b5bd6;--pm:#007aff;--cm:#ff3b30;--sh:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.06)}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--fill:rgba(118,118,128,.24);--line:rgba(255,255,255,.1);--text:#f5f5f7;--sh:none}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Sukhumvit Set","Noto Sans Thai","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:none;color:inherit}
+input,textarea{font:inherit;color:var(--text);outline:none;border:none}
+#app{display:none;max-width:1500px;margin:0 auto;padding:0 20px 110px}
 
-body{
-    margin:0;
-    font-family:-apple-system,"Segoe UI",Roboto;
-    background:
-        radial-gradient(circle at top left,#c7d2fe,transparent 40%),
-        radial-gradient(circle at bottom right,#a5f3fc,transparent 40%),
-        linear-gradient(135deg,#eef2ff,#fdfbff);
-    min-height:100vh;
-}
+/* login */
+#loginBox{min-height:100vh;display:grid;place-items:center;padding:20px}
+.box{width:100%;max-width:340px;background:var(--card);border-radius:28px;padding:32px 28px;text-align:center;box-shadow:var(--sh)}
+.logo{width:64px;height:64px;line-height:64px;font-size:32px;border-radius:18px;margin:0 auto 14px;background:linear-gradient(145deg,#8e8cf0,#5b5bd6);box-shadow:0 8px 20px rgba(91,91,214,.35)}
+.box h2{margin:0 0 16px}
+.box input{width:100%;padding:14px;border-radius:12px;background:var(--fill);text-align:center;font-size:16px}
+.box button{width:100%;margin-top:12px;padding:14px;border-radius:12px;background:var(--ac);color:#fff;font-weight:600}
 
-/* LOGIN */
-#loginBox{
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-#loginBox .box{
-    background:var(--glass);
-    backdrop-filter:var(--blur);
-    padding:34px;
-    border-radius:var(--radius);
-    box-shadow:var(--shadow-soft);
-    text-align:center;
-}
-#loginBox input{
-    padding:14px;
-    border-radius:18px;
-    border:none;
-}
-#loginBox button{
-    margin-top:14px;
-    padding:12px 26px;
-    border:none;
-    border-radius:20px;
-    font-weight:700;
-    cursor:pointer;
-    background:linear-gradient(135deg,#7c4dff,#5e35ff);
-    color:#fff;
-}
+/* top */
+header{display:flex;justify-content:space-between;align-items:center;padding:22px 0 14px}
+.brand{display:flex;gap:12px;align-items:center}.brand .logo{width:44px;height:44px;line-height:44px;font-size:22px;margin:0;border-radius:13px}
+h1{margin:0;font-size:26px;font-weight:800}.brand p{margin:0;font-size:13px;color:var(--sub)}
+.ghost{background:var(--fill);padding:8px 16px;border-radius:999px;font-size:14px;font-weight:600;color:var(--ac)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.stat{background:var(--card);border-radius:20px;padding:16px 18px;box-shadow:var(--sh)}
+.stat span{font-size:13px;color:var(--sub);font-weight:500}.stat b{display:block;font-size:30px;font-weight:800;margin-top:2px}
+.stat.red b{color:#ff3b30}.stat.green b{color:#34c759}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:18px 0 14px}
+.seg{display:flex;background:var(--fill);border-radius:10px;padding:2px}
+.seg button{background:none;padding:6px 16px;border-radius:8px;font-size:14px;font-weight:600;color:var(--sub)}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.exp{display:flex;gap:8px}
 
-/* APP */
-#app{display:none}
+/* board */
+.board{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;align-items:flex-start;padding-bottom:6px;background:var(--bg)}
+.col{flex:0 0 84%;scroll-snap-align:center;background:var(--fill);border-radius:22px;padding:12px;min-height:180px;transition:.15s}
+.col.over{background:rgba(91,91,214,.18);box-shadow:inset 0 0 0 2px var(--ac)}
+.col h3{display:flex;align-items:center;gap:8px;margin:2px 4px 12px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--sub)}
+.col h3 i{width:10px;height:10px;border-radius:50%}.col h3 em{margin-left:auto;font-style:normal;background:var(--card);color:var(--text);padding:1px 9px;border-radius:999px;font-size:12px}
+.empty{text-align:center;color:var(--sub);font-size:13px;padding:22px 0;opacity:.7}
 
-header{
-    margin:20px;
-    padding:26px;
-    background:var(--glass);
-    backdrop-filter:var(--blur);
-    border-radius:var(--radius);
-    box-shadow:var(--shadow-soft);
-    text-align:center;
-    font-size:26px;
-    font-weight:900;
-    position:relative;
-}
-header button{
-    position:absolute;
-    right:24px;
-    top:24px;
-    padding:10px 20px;
-    border-radius:18px;
-    border:none;
-    background:#ff5252;
-    color:#fff;
-    cursor:pointer;
-}
+/* card */
+.card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:var(--sh);cursor:grab}
+.card.drag{opacity:.45}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chip{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:rgba(0,122,255,.14);color:var(--pm)}
+.CM .chip{background:rgba(255,59,48,.14);color:var(--cm)}
+.due{font-size:12px;color:var(--sub)}.due.late{color:#ff3b30;font-weight:600}
+.ttl{margin:10px 0 8px;font-size:15px;font-weight:600;line-height:1.4;word-break:break-word}
+.meta{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub);min-height:22px}
+.av{width:22px;height:22px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center}
+.pg{display:flex;align-items:center;gap:10px;margin-top:10px}.pg input{flex:1;accent-color:var(--ac);min-width:0}.pg b{font-size:13px;min-width:38px;text-align:right}
+.act{display:flex;gap:8px;margin-top:10px}
+.act button{flex:1;padding:7px;border-radius:10px;font-size:13px;font-weight:600;background:var(--fill);color:var(--ac)}
+.act .del{background:rgba(255,59,48,.12);color:#ff3b30}
+.card.DONE{background:linear-gradient(rgba(52,199,89,.15),rgba(52,199,89,.15)),var(--card)}
+.wait{background:linear-gradient(rgba(255,149,0,.16),rgba(255,149,0,.16)),var(--card);border-radius:16px;padding:14px;margin-bottom:10px;font-size:13px;color:var(--sub)}
+.wait strong{display:block;color:var(--text);font-size:15px;margin-bottom:2px}
+.wait textarea{width:100%;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--card);resize:none;min-height:54px;font-size:14px}
 
-/* CONTROLS */
-.controls{
-    margin:20px;
-    padding:22px;
-    background:var(--glass);
-    backdrop-filter:var(--blur);
-    border-radius:var(--radius);
-    box-shadow:var(--shadow-soft);
-    display:grid;
-    gap:14px;
-}
-.controls input,.controls select{
-    padding:14px;
-    border-radius:18px;
-    border:none;
-}
-.controls button{
-    padding:14px;
-    border-radius:20px;
-    border:none;
-    background:linear-gradient(135deg,#7c4dff,#5e35ff);
-    color:#fff;
-    font-weight:800;
-}
-.export-bar{display:flex;gap:12px;flex-wrap:wrap}
-.export-bar button{
-    background:linear-gradient(135deg,#263238,#000);
-}
+/* reference look */
+.ex{display:inline-flex;align-items:center;gap:6px;background:var(--card);box-shadow:var(--sh);padding:8px 14px}
+.ex{font-weight:600}.ex:active{opacity:.6}
+.stat{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.stat b{color:var(--text)}.stat.red b,.stat.green b{color:inherit}
+.stat span{display:block}
+.stat .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;flex:none}
+.ic.p{background:rgba(91,91,214,.14);color:#5b5bd6}.ic.b{background:rgba(0,122,255,.14);color:#007aff}
+.ic.g{background:rgba(52,199,89,.16);color:#34c759}.ic.r{background:rgba(255,59,48,.14);color:#ff3b30}
+.stat.p b{color:#5b5bd6}.stat.b b{color:var(--text)}.stat.green b{color:#34c759}.stat.red b{color:#ff3b30}
+.card{padding:12px 14px;border-radius:14px}.card:hover{box-shadow:0 2px 4px rgba(0,0,0,.06),0 10px 26px rgba(0,0,0,.09)}
+.card .ttl{margin:0 0 10px;font-size:15px;font-weight:600}
+.foot{display:flex;align-items:center;gap:8px}.foot .sp{flex:1}
+.foot .av{width:28px;height:28px;font-size:12px}
+.foot svg{display:block}.foot .ok{color:#34c759}.foot .warn{color:#ff9500}
+.clk{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--sub)}.clk.late{color:#ff3b30;font-weight:600}
+.bar2{height:4px;border-radius:4px;background:var(--fill);margin-top:10px;overflow:hidden}.bar2 i{display:block;height:100%;background:var(--ac);border-radius:4px}
+.card.DONE .bar2 i{background:#34c759}
+.card .pg,.card .act{margin-top:12px}
 
-/* BOARD */
-.board{
-    display:grid;
-    gap:20px;
-    padding:20px;
-}
-
-.column{
-    background:var(--glass);
-    backdrop-filter:var(--blur);
-    border-radius:var(--radius);
-    padding:16px;
-    box-shadow:var(--shadow-soft);
-}
-.column h3{
-    text-align:center;
-    padding:12px;
-    border-radius:18px;
-    font-size:14px;
-    font-weight:900;
-    background:rgba(255,255,255,.6);
-}
-
-/* TASK */
-.task{
-    background:rgba(255,255,255,.9);
-    border-radius:22px;
-    padding:16px;
-    margin-bottom:14px;
-    box-shadow:0 18px 40px rgba(0,0,0,.25);
-    cursor:grab;
-}
-.task.pm{border-left:6px solid var(--pm)}
-.task.cm{border-left:6px solid var(--cm)}
-.task.completed{
-    background:linear-gradient(135deg,#eafff1,#d4f8e3);
-}
-
-.progress-box input{
-    width:70px;
-    padding:8px;
-    border-radius:14px;
-    border:none;
-}
-
-.delete-btn{
-    width:100%;
-    margin-top:10px;
-    padding:8px;
-    border-radius:14px;
-    border:none;
-    background:#ff5252;
-    color:#fff;
-}
-
-/* WAITING */
-.waiting-item{
-    background:linear-gradient(135deg,#fff7e6,#ffedc2);
-    border-left:6px solid #ff9800;
-    border-radius:20px;
-    padding:14px;
-    margin-bottom:12px;
-}
-.waiting-item textarea{
-    width:100%;
-    box-sizing:border-box;
-    border:none;
-    resize:none;
-    padding:10px 12px;
-    border-radius:14px;
-    margin-top:10px;
-    font-family:inherit;
-}
-.waiting-delete{
-    width:100%;
-    margin-top:10px;
-    padding:8px;
-    border:none;
-    border-radius:14px;
-    background:#ff5252;
-    color:#fff;
-    font-weight:700;
-}
+/* fab + sheet */
+.fab{position:fixed;right:22px;bottom:calc(22px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;background:var(--ac);color:#fff;font-size:30px;box-shadow:0 10px 26px rgba(91,91,214,.5);z-index:20}
+.fab:active{transform:scale(.94)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--card);border-radius:26px 26px 0 0;padding:16px 20px calc(24px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.9,.3,1);max-width:520px;margin:0 auto}
+.open .sheet{transform:none}.open .scrim{opacity:1;pointer-events:auto}
+.sheet header{padding:0 0 14px}.sheet h2{margin:0;font-size:17px}
+.sheet header button{background:none;color:var(--ac);font-size:16px;font-weight:600}
+.sheet .grp{display:grid;gap:10px}
+.sheet input[type=text],.sheet input[type=date],.sheet input[type=time]{width:100%;padding:13px 14px;border-radius:12px;background:var(--fill);font-size:16px}
+.sheet input:focus{box-shadow:0 0 0 2px var(--ac)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg.big{width:100%}.seg.big button{flex:1;padding:9px}
+.ac-wrap{position:relative}
+.ac-list{display:none;position:absolute;left:0;bottom:calc(100% + 8px);min-width:100%;max-height:180px;overflow:auto;background:var(--card);border-radius:14px;padding:6px;box-shadow:0 8px 30px rgba(0,0,0,.25),0 0 0 .5px var(--line)}
+.ac-list.on{display:block}
+.ac-item{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;border-radius:10px;cursor:pointer}
+.ac-item:hover{background:var(--fill)}.ac-item button{background:none;color:var(--sub);font-size:18px;padding:0}
 
 @media(min-width:900px){
-    .controls{grid-template-columns:1fr 1fr 2fr auto}
-    .board{grid-template-columns:repeat(5,1fr)}
+ .stats{grid-template-columns:repeat(4,1fr)}
+ .board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible}.col{flex:none}
+ .sheet{top:50%;bottom:auto;border-radius:26px;transform:translateY(-40%) scale(.97);opacity:0;pointer-events:none}
+ .open .sheet{transform:translateY(-50%);opacity:1;pointer-events:auto}
 }
 </style>
 </head>
-
 <body>
 
-<div id="loginBox">
-    <div class="box">
-        <h2>เข้าสู่ระบบ</h2>
-        <input id="username" placeholder="ชื่อผู้ใช้งาน">
-        <br>
-        <button onclick="login()">เข้าใช้งาน</button>
-    </div>
-</div>
+<div id="loginBox"><div class="box">
+  <div class="logo">📋</div><h2>เข้าสู่ระบบ</h2>
+  <input id="username" placeholder="ชื่อผู้ใช้งาน" onkeydown="if(event.key==='Enter')login()">
+  <button onclick="login()">เข้าใช้งาน</button>
+</div></div>
 
 <div id="app">
-<header>
-    KANBAN BOARD
-    <button onclick="logout()">Logout</button>
-</header>
-
-<div class="controls">
-    <input type="date" id="workDate">
-    <select id="workType">
-        <option value="">Type</option>
-        <option>PM</option>
-        <option>CM</option>
-    </select>
-    <input type="text" id="workTask" placeholder="Task description">
-    <button onclick="addTask()">➕ Add</button>
-
-    <div class="export-bar">
-        <button onclick="exportPNG()">PNG</button>
-        <button onclick="exportPDF()">PDF</button>
-        <button onclick="exportExcel()">Excel</button>
-    </div>
+  <header>
+    <div class="brand"><div class="logo">📋</div><div><h1>Kanban</h1><p id="hello"></p></div></div>
+    <button class="ghost" onclick="logout()">ออกจากระบบ</button>
+  </header>
+  <section class="stats" id="stats"></section>
+  <div class="bar">
+    <div class="seg" id="filter"><button data-f="ALL" class="on">ทั้งหมด</button><button data-f="PM">PM</button><button data-f="CM">CM</button></div>
+    <div class="exp"><button class="ghost ex" style="color:#5b5bd6" onclick="exportPNG()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PNG</button><button class="ghost ex" style="color:#ff3b30" onclick="exportPDF()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button><button class="ghost ex" style="color:#34c759" onclick="exportExcel()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Excel</button></div>
+  </div>
+  <main class="board" id="board"></main>
+  <button class="fab" onclick="toggleSheet(true)" aria-label="เพิ่มงาน">＋</button>
 </div>
 
-<div class="board" id="board">
-    <div class="column backlog" data-status="BACKLOG"><h3>BACKLOG</h3></div>
-    <div class="column waiting" data-status="WAITING">
-        <h3>WAITING ⏰</h3>
-        <div id="waitingList"></div>
+<div id="layer">
+  <div class="scrim" onclick="toggleSheet(false)"></div>
+  <div class="sheet">
+    <header><button onclick="toggleSheet(false)">ยกเลิก</button><h2>งานใหม่</h2><button onclick="addTask()">เพิ่ม</button></header>
+    <div class="grp">
+      <input type="text" id="workTask" placeholder="รายละเอียดงาน">
+      <div class="seg big" id="typeSeg"><button data-t="PM" class="on">PM</button><button data-t="CM">CM</button></div>
+      <div class="row2"><input type="date" id="workDate"><input type="time" id="workTime"></div>
+      <div class="ac-wrap"><input type="text" id="workOwner" placeholder="ผู้รับผิดชอบ" autocomplete="off"><div class="ac-list" id="ownerList"></div></div>
     </div>
-    <div class="column todo" data-status="TO-DO"><h3>TO-DO</h3></div>
-    <div class="column progress-col" data-status="IN PROGRESS"><h3>IN PROGRESS</h3></div>
-    <div class="column done" data-status="COMPLETED"><h3>COMPLETED ✔</h3></div>
-</div>
+  </div>
 </div>
 
 <script>
-let currentUser = localStorage.getItem("kb-user");
-const loginBox = document.getElementById("loginBox");
-const app = document.getElementById("app");
-const board = document.getElementById("board");
-let dragged = null;
+const $ = id => document.getElementById(id);
+const COLS = [["BACKLOG","Backlog","#ff3b30"],["WAITING","Waiting","#ff9500"],["TODO","To Do","#007aff"],["PROGRESS","In Progress","#ffcc00"],["DONE","Done","#34c759"]];
+const FLOW = ["BACKLOG","TODO","PROGRESS","DONE"];
+let user = localStorage.getItem("kb-user"), S = {tasks:[],waiting:[]}, filter = "ALL", type = "PM", dragId = null;
 
-const key = () => `kanban-${currentUser}`;
-const today = () => new Date().toISOString().split("T")[0];
+const esc = s => String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+const fmtDate = d => new Date(d+"T00:00").toLocaleDateString("th-TH",{day:"numeric",month:"short"});
+const key = () => "kanban2-"+user, okey = () => "kanban-owners-"+user;
+const owners = () => { try{return JSON.parse(localStorage.getItem(okey())||"[]")}catch(e){return[]} };
+const PAL = ["#5b5bd6","#007aff","#34c759","#ff9500","#af52de","#ff2d55","#00b8d4"];
+const color = n => PAL[[...n].reduce((a,c)=>a+c.charCodeAt(0),0)%PAL.length];
 
-function login(){
-    if(!username.value) return;
-    currentUser = username.value;
-    localStorage.setItem("kb-user", currentUser);
-    loginBox.style.display = "none";
-    app.style.display = "block";
-    loadBoard();
+/* login */
+function login(){ if(!username.value.trim()) return; user=username.value.trim(); localStorage.setItem("kb-user",user); start(); }
+function logout(){ localStorage.removeItem("kb-user"); location.reload(); }
+function start(){ $("loginBox").style.display="none"; $("app").style.display="block"; $("hello").textContent="สวัสดี, "+user; load(); render(); }
+
+/* data (migrates the old innerHTML-based save) */
+function load(){
+  try{ const d=JSON.parse(localStorage.getItem(key())); if(d){S=d;return;} }catch(e){}
+  const h=localStorage.getItem("kanban-"+user); if(!h) return;
+  const d=document.createElement("div"); d.innerHTML=h;
+  const map={"BACKLOG":"BACKLOG","TO-DO":"TODO","IN PROGRESS":"PROGRESS","COMPLETED":"DONE"};
+  d.querySelectorAll(".column").forEach(c=>{ const st=map[c.dataset.status]; if(!st) return;
+    c.querySelectorAll(".task").forEach(t=>S.tasks.push({id:t.dataset.id||uid(),type:t.classList.contains("cm")?"CM":"PM",
+      title:t.dataset.title||t.querySelector("strong").innerText.replace(/^\[(PM|CM)\]\s*/,""),
+      date:t.dataset.date||(t.querySelector("small").innerText.match(/\d{4}-\d\d-\d\d/)||[""])[0],
+      time:t.dataset.time||"",owner:t.dataset.owner||"",pct:parseInt(t.querySelector("input").value)||0,status:st}));
+  });
+  d.querySelectorAll(".waiting-item").forEach(w=>S.waiting.push({id:uid(),taskId:w.dataset.id||"",title:w.dataset.title||w.querySelector("strong").innerText,date:w.dataset.date||"",note:w.dataset.note||""}));
+  persist();
 }
-function logout(){
-    localStorage.removeItem("kb-user");
-    location.reload();
+const persist = () => localStorage.setItem(key(),JSON.stringify(S));
+const save = () => { persist(); render(); };
+
+const ic = (p,s=22) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const I = {
+  layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+  act:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  ok:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  warn:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
+};
+let openId = null;
+/* render */
+function render(){
+  const T=S.tasks, t0=today(), done=T.filter(t=>t.status==="DONE").length;
+  const late=T.filter(t=>t.status!=="DONE"&&t.date&&t.date<t0).length;
+  $("stats").innerHTML=[["งานทั้งหมด",T.length,"p","p",I.layers],["กำลังทำ",T.filter(t=>t.status==="PROGRESS").length,"b","b",I.act],
+    ["เสร็จแล้ว"+(T.length?` (${Math.round(done/T.length*100)}%)`:""),done,"green","g",I.ok],["เลยกำหนด",late,"red","r",I.clock]]
+    .map(([l,v,c,k,i])=>`<div class="stat ${c}"><div><span>${l}</span><b>${v}</b></div><div class="ic ${k}">${ic(i)}</div></div>`).join("");
+  $("board").innerHTML=COLS.map(([st,name,clr])=>{
+    const items = st==="WAITING"
+      ? S.waiting.map(w=>`<div class="wait" data-w="${w.id}"><strong>${esc(w.title)}</strong>📅 ${w.date?fmtDate(w.date):"-"}<textarea placeholder="หมายเหตุ" data-note="${w.id}">${esc(w.note)}</textarea><div class="act"><button class="del" data-wdel="${w.id}">ลบ</button></div></div>`)
+      : T.filter(t=>t.status===st&&(filter==="ALL"||t.type===filter)).map(card);
+    return `<section class="col" data-st="${st}"><h3><i style="background:${clr}"></i>${name}<em>${items.length}</em></h3>${items.join("")||'<div class="empty">ไม่มีงาน</div>'}</section>`;
+  }).join("");
 }
-if(currentUser){
-    loginBox.style.display = "none";
-    app.style.display = "block";
+function card(t){
+  const late=t.status!=="DONE"&&t.date&&t.date<today(), done=t.status==="DONE", open=openId===t.id;
+  const due=t.date?fmtDate(t.date)+(t.time?" "+t.time:""):"";
+  return `<div class="card ${t.type} ${t.status}" draggable="true" data-id="${t.id}">
+    <div class="ttl">${esc(t.title)}</div>
+    <div class="foot">${t.owner?`<span class="av" title="${esc(t.owner)}" style="background:${color(t.owner)}">${esc([...t.owner][0])}</span>`:""}
+      <span class="chip">${t.type}</span><span class="sp"></span>
+      ${done?`<span class="ok">${ic(I.ok,16)}</span>`:late?`<span class="warn">${ic(I.warn,16)}</span>`:""}
+      ${due?`<span class="clk ${late?"late":""}">${ic(I.clock,15)}${due}</span>`:""}</div>
+    ${t.pct>0?`<div class="bar2"><i style="width:${t.pct}%"></i></div>`:""}
+    ${open?`<div class="pg"><input type="range" min="0" max="100" step="5" value="${t.pct}" ${done?"disabled":""} data-pg="${t.id}"><b>${t.pct}%</b></div>
+    <div class="act">${done?"":`<button data-mv="${t.id}">ย้ายไป ▸</button>`}<button class="del" data-del="${t.id}">ลบ</button></div>`:""}</div>`;
 }
+function move(id,st){ const t=S.tasks.find(x=>x.id===id); if(!t) return; t.status=st; if(st==="DONE") t.pct=100; save(); }
 
-function saveBoard(){
-    localStorage.setItem(key(), board.innerHTML);
-}
+/* board events */
+const board=$("board");
+board.addEventListener("click",e=>{
+  const g=a=>e.target.closest("["+a+"]")?.getAttribute(a);
+  if(g("data-mv")){ const t=S.tasks.find(x=>x.id===g("data-mv")); move(t.id,FLOW[Math.min(FLOW.indexOf(t.status)+1,3)]); }
+  else if(g("data-del")){ const id=g("data-del"); S.tasks=S.tasks.filter(t=>t.id!==id); S.waiting=S.waiting.filter(w=>w.taskId!==id); save(); }
+  else if(g("data-wdel")){ S.waiting=S.waiting.filter(w=>w.id!==g("data-wdel")); save(); }
+  else { const c=e.target.closest(".card"); if(c&&!e.target.closest("input,button")){ openId=openId===c.dataset.id?null:c.dataset.id; render(); } }
+});
+board.addEventListener("input",e=>{
+  if(e.target.dataset.pg){ const t=S.tasks.find(x=>x.id===e.target.dataset.pg); t.pct=+e.target.value; e.target.nextElementSibling.textContent=t.pct+"%"; persist(); }
+  else if(e.target.dataset.note){ S.waiting.find(w=>w.id===e.target.dataset.note).note=e.target.value; persist(); }
+});
+board.addEventListener("change",e=>{ if(e.target.dataset.pg) render(); });
+board.addEventListener("dragstart",e=>{ const c=e.target.closest(".card"); if(c){ dragId=c.dataset.id; c.classList.add("drag"); } });
+board.addEventListener("dragend",()=>{ dragId=null; document.querySelectorAll(".drag,.over").forEach(x=>x.classList.remove("drag","over")); });
+board.addEventListener("dragover",e=>{ const c=e.target.closest(".col"); if(c&&dragId){ e.preventDefault(); document.querySelectorAll(".over").forEach(x=>x.classList.remove("over")); c.classList.add("over"); } });
+board.addEventListener("drop",e=>{ const c=e.target.closest(".col"); if(c&&dragId&&c.dataset.st!=="WAITING"){ e.preventDefault(); move(dragId,c.dataset.st); } });
+$("filter").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; filter=b.dataset.f; [...$("filter").children].forEach(x=>x.classList.toggle("on",x===b)); render(); });
 
-function loadBoard(){
-    const d = localStorage.getItem(key());
-    if(d){
-        board.innerHTML = d;
-        rebind();
-    }
-}
-
-function rebind(){
-    document.querySelectorAll(".task").forEach(t=>{
-        t.draggable = true;
-        t.ondragstart = () => dragged = t;
-    });
-
-    document.querySelectorAll(".column").forEach(c=>{
-        c.ondragover = e => e.preventDefault();
-        c.ondrop = e =>{
-            e.preventDefault();
-            if(!dragged) return;
-            c.appendChild(dragged);
-            const input = dragged.querySelector("input");
-            if(c.dataset.status === "COMPLETED"){
-                input.value = 100;
-                input.disabled = true;
-                dragged.classList.add("completed");
-            }else{
-                input.disabled = false;
-                dragged.classList.remove("completed");
-            }
-            saveBoard();
-            dragged = null;
-        }
-    });
-
-    document.querySelectorAll(".waiting-item").forEach(item=>{
-        const textarea = item.querySelector("textarea");
-        if(textarea){
-            textarea.value = item.dataset.note || "";
-            textarea.oninput = () => {
-                item.dataset.note = textarea.value;
-                saveBoard();
-            };
-        }
-        item.querySelector(".waiting-delete").onclick = ()=>{
-            item.remove();
-            saveBoard();
-        };
-    });
-}
-
-function addWaitingItem(title, date){
-    const d = document.createElement("div");
-    d.className = "waiting-item";
-    d.dataset.note = "";
-    d.innerHTML = `
-        <strong>${title}</strong><br>
-        📅 ${date}
-        <textarea placeholder="หมายเหตุ"></textarea>
-        <button class="waiting-delete">ลบ</button>
-    `;
-    document.getElementById("waitingList").appendChild(d);
-    rebind();
-    saveBoard();
-}
-
+/* sheet */
+function toggleSheet(on){ $("layer").classList.toggle("open",on); if(on){ if(!workDate.value) workDate.value=today(); setTimeout(()=>workTask.focus(),250); } }
+$("typeSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; type=b.dataset.t; [...$("typeSeg").children].forEach(x=>x.classList.toggle("on",x===b)); });
 function addTask(){
-    if(!workDate.value || !workType.value || !workTask.value) return;
+  const title=workTask.value.trim(); if(!title||!workDate.value){ (title?workDate:workTask).focus(); return; }
+  const id=uid(), o=workOwner.value.trim();
+  const late=workDate.value<today();
+  S.tasks.push({id,type,title,date:workDate.value,time:workTime.value,owner:o,pct:0,status:late?"BACKLOG":"TODO"});
+  if(late) S.waiting.push({id:uid(),taskId:id,title,date:workDate.value,note:""});
+  if(o) localStorage.setItem(okey(),JSON.stringify([o,...owners().filter(n=>n!==o)].slice(0,30)));
+  workTask.value=""; workTime.value=""; toggleSheet(false); save();
+}
+/* owner dropdown */
+function renderOwners(){
+  const q=workOwner.value.trim().toLowerCase(), l=owners().filter(n=>n.toLowerCase().includes(q)&&n.toLowerCase()!==q);
+  ownerList.innerHTML=l.map(n=>`<div class="ac-item" data-n="${esc(n)}"><span>${esc(n)}</span><button data-d="${esc(n)}">×</button></div>`).join("");
+  ownerList.classList.toggle("on",l.length>0);
+}
+workOwner.addEventListener("focus",renderOwners); workOwner.addEventListener("input",renderOwners);
+workOwner.addEventListener("blur",()=>ownerList.classList.remove("on"));
+ownerList.addEventListener("mousedown",e=>{ e.preventDefault(); const d=e.target.closest("[data-d]"), it=e.target.closest(".ac-item");
+  if(d){ localStorage.setItem(okey(),JSON.stringify(owners().filter(n=>n!==d.dataset.d))); renderOwners(); }
+  else if(it){ workOwner.value=it.dataset.n; ownerList.classList.remove("on"); } });
+addEventListener("keydown",e=>{ if(e.key==="Escape") toggleSheet(false); });
 
-    const t = document.createElement("div");
-    t.className = `task ${workType.value.toLowerCase()}`;
-    t.innerHTML = `
-        <strong>[${workType.value}] ${workTask.value}</strong>
-        <small>${workDate.value}</small>
-        <div class="progress-box">
-            <input type="number" value="0" min="0" max="100"> %
-        </div>
-        <button class="delete-btn" onclick="this.parentElement.remove();saveBoard()">ลบ</button>
-    `;
-
-    if(new Date(workDate.value) < new Date(today())){
-        document.querySelector(".backlog").appendChild(t);
-        addWaitingItem(workTask.value, workDate.value);
-    }else{
-        document.querySelector(".todo").appendChild(t);
-    }
-
-    workTask.value = "";
-    rebind();
-    saveBoard();
+/* export */
+const shot = () => html2canvas(board,{backgroundColor:getComputedStyle(document.body).backgroundColor,scale:2,width:board.scrollWidth,windowWidth:Math.max(board.scrollWidth,innerWidth)});
+const thaiDate = () => new Date().toLocaleDateString("th-TH-u-ca-gregory",{day:"numeric",month:"long",year:"numeric"});
+// wrap the capture in a page-like frame: margins + title
+function framed(c){
+  const pad=96, head=130, o=document.createElement("canvas");
+  o.width=c.width+pad*2; o.height=c.height+pad*2+head;
+  const x=o.getContext("2d"), cs=getComputedStyle(document.body);
+  x.fillStyle=cs.backgroundColor; x.fillRect(0,0,o.width,o.height);
+  x.textBaseline="top"; x.fillStyle=cs.color; x.font="800 56px 'Noto Sans Thai',sans-serif"; x.fillText("Kanban Board",pad,pad);
+  x.fillStyle="#86868b"; x.font="400 30px 'Noto Sans Thai',sans-serif"; x.textAlign="right"; x.fillText(user+" · "+thaiDate(),o.width-pad,pad+18);
+  x.drawImage(c,pad,pad+head);
+  return o;
+}
+function exportPNG(){ shot().then(c=>{ const a=document.createElement("a"); a.href=framed(c).toDataURL("image/png"); a.download="kanban.png"; a.click(); }); }
+function exportPDF(){ shot().then(c=>{
+  const f=framed(c), pdf=new jspdf.jsPDF("l","pt","a4"), W=pdf.internal.pageSize.getWidth(), H=pdf.internal.pageSize.getHeight(), m=36;
+  const k=Math.min((W-m*2)/f.width,(H-m*2)/f.height), w=f.width*k, h=f.height*k;
+  pdf.addImage(f.toDataURL("image/png"),"PNG",(W-w)/2,m,w,h);
+  pdf.save("kanban.pdf");
+}); }
+async function exportExcel(){
+  const by=st=>S.tasks.filter(t=>t.status===st).map(t=>({st,text:t.title,owner:t.owner,time:t.time,pct:t.pct/100}));
+  const items=[...by("BACKLOG"),...S.waiting.map(w=>({st:"WAITING",text:w.title+(w.note?` (${w.note})`:""),owner:"",time:"",pct:0})),...by("TODO"),...by("PROGRESS"),...by("DONE")];
+  const wb=new ExcelJS.Workbook(), ws=wb.addWorksheet("KANBAN"), now=new Date(), pad=n=>String(n).padStart(2,"0");
+  [2,26,26,26,14,13,26,14,13,26,14,13,16,2].forEach((w,i)=>ws.getColumn(i+1).width=w);
+  const fill=c=>({type:"pattern",pattern:"solid",fgColor:{argb:"FF"+c}}), th={style:"thin",color:{argb:"FFBFBFBF"}}, bd={top:th,left:th,bottom:th,right:th};
+  const white={bold:true,color:{argb:"FFFFFFFF"}};
+  for(let c=2;c<=13;c++) ws.getCell(1,c).fill=fill("1B1F27");
+  ws.mergeCells("B1:F1"); ws.mergeCells("I1:M1"); ws.mergeCells("B2:F2"); ws.mergeCells("J2:M2");
+  Object.assign(ws.getCell("B1"),{value:"KANBAN BOARD",font:{...white,size:16}});
+  Object.assign(ws.getCell("I1"),{value:"อัปเดตล่าสุด "+now.toLocaleDateString("th-TH-u-ca-gregory",{day:"numeric",month:"short",year:"numeric"}),font:{...white,size:14},alignment:{horizontal:"right"}});
+  Object.assign(ws.getCell("B2"),{value:"จัดการงานตามสถานะ: To Do → In Progress → Done",font:{italic:true,size:9,color:{argb:"FF7F7F7F"}}});
+  Object.assign(ws.getCell("J2"),{value:"ตอนนี้เวลา "+pad(now.getHours())+":"+pad(now.getMinutes()),font:{italic:true,size:9,color:{argb:"FF7F7F7F"}},alignment:{horizontal:"right"}});
+  const SP={BACKLOG:[2,2,"E8445A","F4CCCC","BACKLOG"],WAITING:[3,3,"FF8A47","FCE4D6","WAITING"],TODO:[4,6,"5B9BD5","DDEBF7","TO DO"],PROGRESS:[7,9,"FFC000","FFF2CC","IN PROGRESS"],DONE:[10,13,"70AD47","E2EFDA","DONE"]};
+  Object.values(SP).forEach(([a,b,c,,t])=>{ if(a!==b) ws.mergeCells(3,a,3,b); Object.assign(ws.getCell(3,a),{value:t,font:white,alignment:{horizontal:"center"}}); for(let k=a;k<=b;k++) ws.getCell(3,k).fill=fill(c); });
+  ["งานที่ต้องทำ","งานค้าง","งาน","ผู้รับผิดชอบ","กำหนดส่ง","งาน","ผู้รับผิดชอบ","กำหนดส่ง","งาน","ผู้รับผิดชอบ","เวลา","ผลการดำเนินงาน"].forEach((t,i)=>Object.assign(ws.getCell(4,i+2),{value:t,fill:fill("E7E6E6"),font:{bold:true},alignment:{horizontal:"center"},border:bd}));
+  const total=Math.max(9,items.length);
+  for(let i=0;i<total;i++){
+    const row=5+i, it=items[i];
+    for(let c=2;c<=13;c++){ const x=ws.getCell(row,c); x.border=bd; x.alignment={wrapText:true,vertical:"middle",horizontal:[2,3,4,7,10].includes(c)?"left":"center"}; }
+    if(i%2===0) Object.values(SP).forEach(([a,b,,tn])=>{ for(let c=a;c<=b;c++) ws.getCell(row,c).fill=fill(tn); });
+    if(it){ const a=SP[it.st][0]; ws.getCell(row,a).value=it.text; if(a>=4){ ws.getCell(row,a+1).value=it.owner; ws.getCell(row,a+2).value=it.time; } Object.assign(ws.getCell(row,13),{value:it.pct,numFmt:"0%"}); }
+  }
+  const r0=5+total+2, head=(r,c1,c2,t)=>{ if(c2>c1) ws.mergeCells(r,c1,r,c2); Object.assign(ws.getCell(r,c1),{value:t,font:white}); for(let c=c1;c<=c2;c++) ws.getCell(r,c).fill=fill("1B1F27"); };
+  head(r0,2,2,"สรุป"); head(r0,3,3,"จำนวนงาน");
+  [["To Do","TODO"],["In Progress","PROGRESS"],["Done","DONE"]].forEach(([l,k],i)=>{ ws.getCell(r0+1+i,2).value=l; Object.assign(ws.getCell(r0+1+i,3),{value:items.filter(x=>x.st===k).length,alignment:{horizontal:"left"}}); [2,3].forEach(c=>ws.getCell(r0+1+i,c).fill=fill("F2F2F2")); });
+  const block=(r,t,L)=>{ head(r,7,13,t); L.forEach((x,i)=>{ ws.mergeCells(r+1+i,7,r+1+i,13); Object.assign(ws.getCell(r+1+i,7),{value:x,fill:fill("F2F2F2")}); }); return r+L.length+2; };
+  const nx=block(r0,"วิธีใช้",["1) เพิ่มการ์ดงานในคอลัมน์ To Do","2) ย้ายงานไป In Progress เมื่อเริ่มทำ","3) ย้ายงานไป Done เมื่อเสร็จ","4) ใส่ผู้รับผิดชอบและกำหนดส่งเพื่อจัดลำดับงาน"]);
+  block(nx,"ความหมายของแต่ละสถานะ",["🔴 BACKLOG — งานที่ต้องทำ แต่ยังไม่ได้เริ่มวางแผนดำเนินการ","🟠 WAITING — งานที่ติดรอข้อมูล / รออนุมัติ / รอผู้รับเหมา / รออะไหล่","🔵 TO DO — งานที่พร้อมดำเนินการ","🟡 IN PROGRESS — งานที่กำลังดำเนินการ","🟢 DONE — งานที่ดำเนินการเสร็จแล้ว พร้อมบันทึกผลการดำเนินงาน"]);
+  ws.pageSetup={paperSize:9,orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,
+    margins:{left:.5,right:.5,top:.6,bottom:.6,header:.3,footer:.3},printArea:"A1:N"+(nx+5)};
+  ws.headerFooter={oddFooter:"&C&P / &N"};
+  const buf=await wb.xlsx.writeBuffer(), a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})); a.download="kanban.xlsx"; a.click();
 }
 
-function exportPNG(){
-    html2canvas(board).then(c=>{
-        const a=document.createElement("a");
-        a.href=c.toDataURL();
-        a.download="kanban.png";
-        a.click();
-    });
-}
-function exportPDF(){
-    html2canvas(board).then(c=>{
-        const pdf=new jspdf.jsPDF("l","pt","a4");
-        const w=pdf.internal.pageSize.getWidth();
-        pdf.addImage(c,"PNG",0,0,w,c.height*w/c.width);
-        pdf.save("kanban.pdf");
-    });
-}
-function exportExcel(){
-    const rows=[["Status","Type","Task","Date","Progress"]];
-    document.querySelectorAll(".column").forEach(col=>{
-        col.querySelectorAll(".task").forEach(t=>{
-            rows.push([
-                col.dataset.status,
-                t.classList.contains("pm")?"PM":"CM",
-                t.querySelector("strong").innerText,
-                t.querySelector("small").innerText,
-                t.querySelector("input").value
-            ]);
-        });
-    });
-    const wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),"KANBAN");
-    XLSX.writeFile(wb,"kanban.xlsx");
-}
-
-loadBoard();
+if(user) start();
 </script>
-
 </body>
 </html>
