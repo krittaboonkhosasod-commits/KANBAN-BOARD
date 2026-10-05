@@ -114,6 +114,7 @@ h1{margin:0;font-size:26px;font-weight:800}.brand p{margin:0;font-size:13px;colo
  .sheet{top:50%;bottom:auto;border-radius:26px;transform:translateY(-40%) scale(.97);opacity:0;pointer-events:none}
  .open .sheet{transform:translateY(-50%);opacity:1;pointer-events:auto}
 }
+body::after{content:"THE END DX TCD.";position:fixed;right:16px;bottom:4px;z-index:9999;pointer-events:none;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--sub);opacity:.75}
 </style>
 </head>
 <body>
@@ -284,6 +285,9 @@ function framed(c){
   x.textBaseline="top"; x.fillStyle=cs.color; x.font="800 56px 'Noto Sans Thai',sans-serif"; x.fillText("Kanban Board",pad,pad);
   x.fillStyle="#86868b"; x.font="400 30px 'Noto Sans Thai',sans-serif"; x.textAlign="right"; x.fillText(user+" · "+thaiDate(),o.width-pad,pad+18);
   x.drawImage(c,pad,pad+head);
+  x.save(); x.globalAlpha=.7; x.fillStyle="#86868b"; x.font="700 34px 'Noto Sans Thai',Arial,sans-serif";
+  x.textAlign="right"; x.textBaseline="middle"; x.fillText("THE END DX TCD.",o.width-pad,o.height-pad/2);
+  x.restore();
   return o;
 }
 function exportPNG(){ shot().then(c=>{ const a=document.createElement("a"); a.href=framed(c).toDataURL("image/png"); a.download="kanban.png"; a.click(); }); }
@@ -322,9 +326,11 @@ async function exportExcel(){
   const block=(r,t,L)=>{ head(r,7,13,t); L.forEach((x,i)=>{ ws.mergeCells(r+1+i,7,r+1+i,13); Object.assign(ws.getCell(r+1+i,7),{value:x,fill:fill("F2F2F2")}); }); return r+L.length+2; };
   const nx=block(r0,"วิธีใช้",["1) เพิ่มการ์ดงานในคอลัมน์ To Do","2) ย้ายงานไป In Progress เมื่อเริ่มทำ","3) ย้ายงานไป Done เมื่อเสร็จ","4) ใส่ผู้รับผิดชอบและกำหนดส่งเพื่อจัดลำดับงาน"]);
   block(nx,"ความหมายของแต่ละสถานะ",["🔴 BACKLOG — งานที่ต้องทำ แต่ยังไม่ได้เริ่มวางแผนดำเนินการ","🟠 WAITING — งานที่ติดรอข้อมูล / รออนุมัติ / รอผู้รับเหมา / รออะไหล่","🔵 TO DO — งานที่พร้อมดำเนินการ","🟡 IN PROGRESS — งานที่กำลังดำเนินการ","🟢 DONE — งานที่ดำเนินการเสร็จแล้ว พร้อมบันทึกผลการดำเนินงาน"]);
+  const put_wm=()=>{ const c=ws.getCell(nx+7,13); c.value="THE END DX TCD."; c.font={bold:true,size:10,color:{argb:"FF86868B"}}; c.alignment={horizontal:"right"}; };
   ws.pageSetup={paperSize:9,orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,
-    margins:{left:.5,right:.5,top:.6,bottom:.6,header:.3,footer:.3},printArea:"A1:N"+(nx+5)};
-  ws.headerFooter={oddFooter:"&C&P / &N"};
+    margins:{left:.5,right:.5,top:.6,bottom:.6,header:.3,footer:.3},printArea:"A1:N"+(nx+7)};
+  ws.headerFooter={oddFooter:"&C&P / &N&R&BTHE END DX TCD.&B"};
+  put_wm();
   const buf=await wb.xlsx.writeBuffer(), a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})); a.download="kanban.xlsx"; a.click();
 }
